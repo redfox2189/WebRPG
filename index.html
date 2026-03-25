@@ -1,20 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebWork</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div id="Player">
-        <p>Health:</p>
-        <p>Attack:</p>
-        <p>Defence:</p>
+        <p id="Health"></p>
+        <p id="Attack"></p>
+        <p id="Defence"></p>
     </div>
     <br>
     <div id="Game_Container">
-        
+        <h4 id="Message">Welcome to WebRPG. A simple Rpg about fighting monsters.</h4>
+        <div id="Game_View">
+            <div id="Monster_side">
+                <p id="Monster"></p>
+                <img id="Monster_Image" src="" alt="">
+            </div>
+            <div id="Player_side">
+                <div id="Starting">
+                    <button id="NewBtn">New Game</button>
+                    <button id="LoadBtn">Load Game</button>
+                </div>
+                <div id="Combat">
+                    <button id="DefendBtn">Defend</button>
+                    <button id="AttackBtn">Attack</button>
+                    <button id="SaveBtn">Save Game</button>
+                </div>
+                <div id="Shop">
+                    <button id="HealBtn">Heal</button>
+                    <button id="UpgradeBtn">Upgrade</button>
+                </div>
+            </div>
+        </div>
     </div>
 
 </body>
+<footer>
+    <p>&copy; 2026 WebRPG. All rights reserved.</p>
+</footer>
