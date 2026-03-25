@@ -17,7 +17,51 @@ const dom = {
     Gold: $('#Gold'),
     Bag: $('#Bag'),
     Item_List: $('#Item_List'),
-    Item_Use: $('#Item_Use'),
-    Item_Drop: $('#Item_Drop'),
+    UseBtn: $('#UseBtn'),
+    DropBtn: $('#DropBtn'),
 }
 
+class player {
+    constructor(name, health, attack, defence, gold) {
+        this.name = name;
+        this.health = health;
+        this.attack = attack;
+        this.defence = defence;
+        this.gold = gold;
+    }
+}
+
+class monster {
+    constructor(Monster_Name, Monster_Image, Monster_Health, Attack, Defence) {
+        this.Monster_Name = Monster_Name;
+        this.Monster_Image = Monster_Image;
+        this.Monster_Health = Monster_Health;
+        this.Attack = Attack;
+        this.Defence = Defence;
+    }
+}
+
+class item {
+    constructor(name, effect) {
+        this.name = name;
+        this.effect = effect;
+    }
+}
+
+class Goblin extends monster {
+    constructor() {
+        super('Goblin', '/goblin.png', 30, 10, 5);
+    }
+}
+
+class Orc extends monster {
+    constructor() {
+        super('Orc', '/orc.png', 50, 15, 10);
+    }
+}
+
+class Dragon extends monster {
+    constructor() {
+        super('Dragon', '/dragon.png', 100, 20, 15);
+    }
+}
