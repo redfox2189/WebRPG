@@ -39,11 +39,19 @@ body{
 }
 
 #Shop{
-    display:grid;
+    display:none;
     grid-template-columns: repeat(3, 1fr);
 }
 
+#Bag{
+    display:none;
+    grid-template-columns: repeat(3, 1fr);
+}
 
+#Bag_Buttons{
+    display:none;
+    grid-template-columns: repeat(3, 1fr);
+}
 
 footer{
     position:fixed;
