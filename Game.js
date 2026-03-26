@@ -22,12 +22,11 @@ const dom = {
 }
 
 class player {
-    constructor(name, health, attack, defence, gold) {
-        this.name = name;
-        this.health = health;
-        this.attack = attack;
-        this.defence = defence;
-        this.gold = gold;
+    constructor(health, attack, defence, gold) {
+        this.health = 100;
+        this.attack = 10;
+        this.defence = 5;
+        this.gold = 0;
     }
 }
 
@@ -65,3 +64,32 @@ class Dragon extends monster {
         super('Dragon', '/dragon.png', 100, 20, 15);
     }
 }
+
+class HealthPoton extends item {
+    constructor() {
+        super('Health Potion', 'Restores 20 health');
+    }
+}
+
+class AttackPotion extends item {
+    constructor() {
+        super('Attack Potion', 'Increases attack by 5 for next combat');
+    }
+}
+
+class DefencePotion extends item {
+    constructor() {
+        super('Defence Potion', 'Increases defence by 5 for next combat');
+    }
+}
+
+class Game {
+    constructor() {
+        this.player = new player('Hero', 100, 20, 10, 50);
+        this.monsters = [new Goblin(), new Orc(), new Dragon()];
+        this.items = [new HealthPoton(), new AttackPotion(), new DefencePotion()];
+        this.CurrMonster = null;
+    }
+}
+
+export { Game, player, monster, item, Goblin, Orc, Dragon, HealthPoton, AttackPotion, DefencePotion };
