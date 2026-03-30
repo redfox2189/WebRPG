@@ -7,7 +7,13 @@ const dom = {
     Monster_Image: $('#Monster_Image'),
     Monster_Health: $('#Monster_Health'),
     Start: $('#Start'),
+    NewBtn: $('#NewBtn'),
+    LoadBtn: $('#LoadBtn'),
     Combat: $('#Combat'),
+    AttackBtn: $('#AttackBtn'),
+    DefendBtn: $('#DefendBtn'),
+    SaveBtn: $('#SaveBtn'),
+    BagBtn: $('#BagBtn'),
     Shop: $('#Shop'),
     Bag: $('#Bag'),
     Player_Side: $('#Player_Side'),
@@ -92,4 +98,14 @@ class Game {
     }
 }
 
-export { Game, player, monster, item, Goblin, Orc, Dragon, HealthPoton, AttackPotion, DefencePotion };
+dom.NewBtn.addEventListener('click', () => {
+    const game = new Game();
+    dom.Message.textContent = 'New Game Started!';
+    
+    dom.Player_Side.style.display = 'grid';
+    dom.Monster_Side.style.display = 'grid';
+    dom.Start.style.display = 'none';
+    dom.Combat.style.display = 'grid';
+    updatePlayerStats(game);
+    spawnMonster(game);
+});
