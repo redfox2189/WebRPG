@@ -7,7 +7,8 @@
 body{
     display:grid;
     place-items: center;
-    grid-template-rows: repeat(2,1fr);
+    grid: 'Game_Container' 1fr,
+                  'Bag' 1fr 'Player' 1fr;
     min-height:100vh;
     padding:20px;
     background-color: #f4f4f4;
@@ -17,11 +18,18 @@ body{
 #Game_Container{
     display:grid;
     padding: 7px;
-    border: 2px solid black;
+    border: 5px solid lightblue;
     grid-template-rows: repeat(1, 1fr);
     gap:5px;
-    min-height: 80%;
-    max-width:100%;
+    width: 85%;
+}
+
+#Monster_Side{
+    display:grid;
+    position:center;
+    flex-direction:column;
+    gap:5px;
+    justify-content: center;
 }
 
 #Player_Side{
@@ -51,9 +59,14 @@ img{
     grid-template-columns: repeat(3, 1fr);
 }
 
+#PlayScreen{
+    display:grid;
+    gap: 30px;
+    grid-template-columns: repeat(2, 1fr);
+}
+
 #Bag{
-    display:none;
-    grid-template-columns: repeat(3, 1fr);
+    display:grid;
 }
 
 #Bag_Buttons{

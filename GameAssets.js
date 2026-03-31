@@ -3,6 +3,7 @@ const $ = (selector) => document.querySelector(selector);
 const dom = {
     Body : $('#Body'),
     Message: $('#Message'),
+    fightCount: $('#fightCount'),
     Monster_Side: $('#Monster_Side'),
     Monster_Name: $('#Monster_Name'),
     Monster_Image: $('#Monster_Image'),
