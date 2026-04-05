@@ -70,32 +70,34 @@ class Game {
         this.CurrMonster = null;
         this.monsterDefending = false;
         this.fightCount = 0;
+        this.pendingNextMonster = false;
     }
 }
 
 let game = null;
 
+/* =========================
+   GAME START / SAVE / LOAD
+========================= */
+
 dom.NewBtn.addEventListener('click', () => {
     game = new Game();
+    showGameUI();
     dom.Message.textContent = 'New Game Started!';
-    dom.Player.style.display = 'grid';
-    dom.Monster_Side.style.display = 'grid';
-    dom.Start.style.display = 'none';
-    dom.Combat.style.display = 'grid';
     Fight(game);
 });
 
 dom.LoadBtn.addEventListener('click', () => {
     const savedGame = localStorage.getItem('rpgGame');
+
     if (savedGame) {
         game = JSON.parse(savedGame);
         game.fightCount = game.fightCount || 0;
-        dom.fightCount.textContent = `Monsters Defeated: ${game.fightCount}`;
+        game.monsterDefending = game.monsterDefending || false;
+        game.pendingNextMonster = game.pendingNextMonster || false;
+
+        showGameUI();
         dom.Message.textContent = 'Game Loaded!';
-        dom.Player.style.display = 'grid';
-        dom.Monster_Side.style.display = 'grid';
-        dom.Start.style.display = 'none';
-        dom.Combat.style.display = 'grid';
         Fight(game);
     } else {
         dom.Message.textContent = 'No saved game found!';
@@ -103,57 +105,184 @@ dom.LoadBtn.addEventListener('click', () => {
 });
 
 dom.SaveBtn.addEventListener('click', () => {
-    if (game) {
-        game.fightCount = game.fightCount;
-        localStorage.setItem('rpgGame', JSON.stringify(game));
-        dom.Message.textContent = 'Game Saved!';
-    } else {
+    if (!game) {
         dom.Message.textContent = 'No game to save!';
+        return;
     }
+
+    localStorage.setItem('rpgGame', JSON.stringify(game));
+    dom.Message.textContent = 'Game Saved!';
 });
 
-updatePlayerStats = (game) => {
+function showGameUI() {
+    dom.Player.style.display = 'grid';
+    dom.Monster_Side.style.display = 'grid';
+    dom.Start.style.display = 'none';
+    dom.Combat.style.display = 'grid';
+    dom.Shop.style.display = 'none';
+}
+
+function showShopUI() {
+    dom.Combat.style.display = 'none';
+    dom.Monster_Side.style.display = 'none';
+    dom.Shop.style.display = 'grid';
+}
+
+function showCombatUI() {
+    dom.Shop.style.display = 'none';
+    dom.Combat.style.display = 'grid';
+    dom.Monster_Side.style.display = 'grid';
+}
+
+function updatePlayerStats(game) {
     dom.MaxHP.textContent = `Max HP: ${game.player.MaxHP}`;
     dom.Health.textContent = `Health: ${game.player.health}`;
     dom.Attack.textContent = `Attack: ${game.player.attack}`;
     dom.Defence.textContent = `Defence: ${game.player.defence}`;
     dom.Gold.textContent = `Gold: ${game.player.gold}`;
+    dom.fightCount.textContent = `Monsters Defeated: ${game.fightCount}`;
 }
 
-spawnStartMonster = (game) => {
-    game.CurrMonster = game.monsters[0];
+function updateMonsterUI(game) {
+    if (!game.CurrMonster) return;
+
     dom.Monster_Name.textContent = game.CurrMonster.Monster_Name;
     dom.Monster_Image.src = game.CurrMonster.Monster_Image;
-    dom.Monster_Health.textContent = `Health: ${game.CurrMonster.Monster_Health}`;
+    dom.Monster_Health.textContent = `Health: ${Math.max(0, game.CurrMonster.Monster_Health)}`;
 }
 
-spawnMonster = (game) => {
+function spawnStartMonster(game) {
     game.monsterDefending = false;
-    const nextMonster = Math.random() < 0.5 ? new Goblin() : new Orc();
-
-    game.CurrMonster = nextMonster;
-    dom.Monster_Name.textContent = game.CurrMonster.Monster_Name;
-    dom.Monster_Image.src = game.CurrMonster.Monster_Image;
-    dom.Monster_Health.textContent = `Health: ${game.CurrMonster.Monster_Health}`;
+    game.CurrMonster = new Goblin();
+    updateMonsterUI(game);
 }
 
-spawnBoss = (game) => {
+function spawnMonster(game) {
     game.monsterDefending = false;
-    game.monsters[2] = new Dragon();
-    game.CurrMonster = game.monsters[2];
-    dom.Monster_Name.textContent = game.CurrMonster.Monster_Name;
-    dom.Monster_Image.src = game.CurrMonster.Monster_Image;
-    dom.Monster_Health.textContent = `Health: ${game.CurrMonster.Monster_Health}`;
+    game.CurrMonster = Math.random() < 0.5 ? new Goblin() : new Orc();
+    updateMonsterUI(game);
 }
 
-Shop = (game) => {
+function spawnBoss(game) {
+    game.monsterDefending = false;
+    game.CurrMonster = new Dragon();
+    updateMonsterUI(game);
+}
+
+function spawnNextMonster(game) {
+    if (game.fightCount > 0 && game.fightCount % 3 === 0) {
+        spawnBoss(game);
+    } else {
+        spawnMonster(game);
+    }
+}
+
+function Fight(game) {
+    if (!game.CurrMonster) {
+        spawnStartMonster(game);
+    } else {
+        updateMonsterUI(game);
+    }
+
     updatePlayerStats(game);
+}
+
+function Shop(game) {
+    updatePlayerStats(game);
+    showShopUI();
+    dom.Message.textContent = 'A shop has appeared!';
+}
+
+function playerDeath(game) {
+    game.player.health = 0;
+    updatePlayerStats(game);
+
+    dom.Message.textContent = 'You died! Game Over!';
     dom.Combat.style.display = 'none';
     dom.Monster_Side.style.display = 'none';
-    dom.Message.textContent = 'A shop has appeared!';
-    dom.Shop.style.display = 'grid';
-    // spawn items to buy
 }
+
+
+function MonsterTurn(game, playerDefending = false) {
+    if (!game || !game.CurrMonster || game.CurrMonster.Monster_Health <= 0) return;
+
+    const monsterAction = Math.floor(Math.random() * 2); // 0 = attack, 1 = defend
+
+    if (monsterAction === 0) {
+        let damageToPlayer;
+
+        if (playerDefending) {
+            damageToPlayer = Math.max(0, game.CurrMonster.Attack - (game.player.defence + 3));
+            dom.Message.textContent = `${game.CurrMonster.Monster_Name} attacks, but you defend!`;
+        } else {
+            damageToPlayer = Math.max(1, game.CurrMonster.Attack - game.player.defence);
+            dom.Message.textContent = `${game.CurrMonster.Monster_Name} attacks!`;
+        }
+
+        game.player.health -= damageToPlayer;
+
+        if (game.player.health <= 0) {
+            playerDeath(game);
+            return;
+        }
+
+        updatePlayerStats(game);
+    } else {
+        game.monsterDefending = true;
+        dom.Message.textContent = `${game.CurrMonster.Monster_Name} is defending!`;
+    }
+}
+
+function defeatMonster(game) {
+    dom.Message.textContent = `You defeated the ${game.CurrMonster.Monster_Name}!`;
+    game.player.gold += game.CurrMonster.goldReward;
+    game.fightCount++;
+    updatePlayerStats(game);
+
+    if (game.fightCount % 2 === 0) {
+        game.pendingNextMonster = true;
+        Shop(game);
+        return;
+    }
+
+    spawnNextMonster(game);
+}
+
+dom.AttackBtn.addEventListener('click', () => {
+    if (!game || !game.CurrMonster) return;
+
+    let damageToMonster;
+
+    if (game.monsterDefending) {
+        damageToMonster = Math.max(0, game.player.attack - (game.CurrMonster.Defence + 3));
+        game.monsterDefending = false;
+        dom.Message.textContent = `You attack, but the ${game.CurrMonster.Monster_Name} is defending!`;
+    } else {
+        damageToMonster = Math.max(1, game.player.attack - game.CurrMonster.Defence);
+        dom.Message.textContent = `You attack the ${game.CurrMonster.Monster_Name}!`;
+    }
+
+    game.CurrMonster.Monster_Health -= damageToMonster;
+    updateMonsterUI(game);
+
+    if (game.CurrMonster.Monster_Health <= 0) {
+        defeatMonster(game);
+        return;
+    }
+
+    MonsterTurn(game);
+});
+
+dom.DefendBtn.addEventListener('click', () => {
+    if (!game || !game.CurrMonster) return;
+
+    dom.Message.textContent = 'You defend!';
+    MonsterTurn(game, true);
+});
+
+/* =========================
+   BUTTONS - SHOP
+========================= */
 
 dom.HealUPBtn.addEventListener('click', () => {
     if (!game) return;
@@ -174,109 +303,26 @@ dom.UpgradeBtn.addEventListener('click', () => {
 
     if (game.player.gold >= 30) {
         game.player.gold -= 30;
-        game.player.defence += 5;
         game.player.attack += 5;
+        game.player.defence += 5;
         updatePlayerStats(game);
-        dom.Message.textContent = 'You Upgraded your stats!';
+        dom.Message.textContent = 'You upgraded your stats!';
     } else {
         dom.Message.textContent = 'Not enough gold!';
     }
 });
 
 dom.ExitShopBtn.addEventListener('click', () => {
-    dom.Shop.style.display = 'none';
-    dom.Combat.style.display = 'grid';
-    dom.Monster_Side.style.display = 'grid';
+    if (!game) return;
+
+    showCombatUI();
     dom.Message.textContent = 'You left the shop!';
-});
 
-MonsterTurn = (game, playerDefending = false) => {
-    if (!game || !game.CurrMonster || game.CurrMonster.Monster_Health <= 0) return;
-
-    const monsterAction = Math.floor(Math.random() * 2); // 0 = attack, 1 = defend
-
-    if (monsterAction === 0) {
-        let damageToPlayer;
-
-        if (playerDefending) {
-            damageToPlayer = Math.max(0, game.CurrMonster.Attack - (game.player.defence + 3));
-            dom.Message.textContent = `${game.CurrMonster.Monster_Name} attacks, but you defend!`;
-        } else {
-            damageToPlayer = Math.max(1, game.CurrMonster.Attack - game.player.defence);
-            dom.Message.textContent = `${game.CurrMonster.Monster_Name} attacks!`;
-        }
-
-        game.player.health -= damageToPlayer;
-        updatePlayerStats(game);
-
-        if (game.player.health <= 0) {
-            game.player.health = 0;
-            updatePlayerStats(game);
-            dom.Message.textContent = 'You died! Game Over!';
-            dom.Combat.style.display = 'none';
-            dom.Monster_Side.style.display = 'none';
-        }
-
-    } else {
-        game.monsterDefending = true;
-        dom.Message.textContent = `${game.CurrMonster.Monster_Name} is defending!`;
+    if (game.pendingNextMonster) {
+        spawnNextMonster(game);
+        game.pendingNextMonster = false;
     }
-}
 
-Fight = (game) => {
-    if (!game.CurrMonster) {
-        spawnStartMonster(game);
-    } else {
-        dom.Monster_Name.textContent = game.CurrMonster.Monster_Name;
-        dom.Monster_Image.src = game.CurrMonster.Monster_Image;
-        dom.Monster_Health.textContent = `Health: ${game.CurrMonster.Monster_Health}`;
-    }
-    dom.fightCount.textContent = `Monsters Defeated: ${game.fightCount}`;
+    updateMonsterUI(game);
     updatePlayerStats(game);
-
-}
-
-dom.AttackBtn.addEventListener('click', () => {
-    if (!game || !game.CurrMonster) return;
-
-    let damageToMonster;
-    if (game.monsterDefending) {
-        damageToMonster = Math.max(0, game.player.attack - (game.CurrMonster.Defence + 3));
-        game.monsterDefending = false;
-        dom.Message.textContent = `You attack, but the ${game.CurrMonster.Monster_Name} is defending!`;
-    } else {
-        damageToMonster = Math.max(1, game.player.attack - game.CurrMonster.Defence);
-        dom.Message.textContent = `You attack the ${game.CurrMonster.Monster_Name}!`;
-    }
-    game.CurrMonster.Monster_Health -= damageToMonster;
-    dom.Message.textContent = `You attack the ${game.CurrMonster.Monster_Name}!`;
-    dom.Monster_Health.textContent = `Health: ${game.CurrMonster.Monster_Health}`;
-
-    if (game.CurrMonster.Monster_Health <= 0) {
-        dom.Message.textContent = `You defeated the ${game.CurrMonster.Monster_Name}!`;
-        game.player.gold += game.CurrMonster.goldReward;
-        game.fightCount = game.fightCount || 0;
-        game.fightCount++;
-        dom.fightCount.textContent = `Monsters Defeated: ${game.fightCount}`;
-        updatePlayerStats(game);
-        if (game.fightCount % 2 === 0) {
-            Shop(game);
-        }
-        if (game.fightCount % 3 === 0) {
-            spawnBoss(game);
-        } else {
-            spawnMonster(game);
-        }
-        return;
-    }
-
-    MonsterTurn(game);
-});
-
-
-dom.DefendBtn.addEventListener('click', () => {
-    if (!game || !game.CurrMonster) return;
-
-    dom.Message.textContent = 'You defend!';
-    MonsterTurn(game, true);
 });

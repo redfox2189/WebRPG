@@ -22,6 +22,7 @@ body{
     grid-template-rows: repeat(1, 1fr);
     gap:5px;
     width: 85%;
+    min-height: 30vh
 }
 
 #Monster_Side{
