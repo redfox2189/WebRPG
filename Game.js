@@ -5,6 +5,7 @@ class Player {
         this.attack = attack;
         this.defence = defence;
         this.gold = gold;
+        this.items = [];
     }
 }
 
@@ -64,21 +65,18 @@ class DefencePotion extends Item {
 
 class Game {
     constructor() {
-        this.player = new Player(100, 100, 10, 5, 50);
+        this.player = new Player(100, 100, 15, 5, 50);
         this.monsters = [new Goblin(), new Orc(), new Dragon()];
-        this.items = [new HealthPotion(), new AttackPotion(), new DefencePotion()];
+        this.shopItems = [new HealthPotion(), new AttackPotion(), new DefencePotion()];
         this.CurrMonster = null;
         this.monsterDefending = false;
         this.fightCount = 0;
         this.pendingNextMonster = false;
+        this.Encouter = Math.floor(Math.random() * 3);
     }
 }
 
 let game = null;
-
-/* =========================
-   GAME START / SAVE / LOAD
-========================= */
 
 dom.NewBtn.addEventListener('click', () => {
     game = new Game();
@@ -130,8 +128,32 @@ function showShopUI() {
 
 function showCombatUI() {
     dom.Shop.style.display = 'none';
+    dom.Bag.style.display = 'none';
+    dom.Bag_Buttons.style.display = 'none';
     dom.Combat.style.display = 'grid';
     dom.Monster_Side.style.display = 'grid';
+}
+
+function showBagUI() {
+    dom.Combat.style.display = 'none';
+    dom.Monster_Side.style.display = 'none';
+    dom.Bag.style.display = 'grid';
+    dom.Bag_Buttons.style.display = 'grid';
+    dom.Bag_List.innerHTML = '';
+
+    if (!game.player.items || game.player.items.length === 0) {
+        const emptyText = document.createElement('div');
+        emptyText.textContent = 'Your bag is empty.';
+        dom.Bag_List.appendChild(emptyText);
+        return;
+    }
+
+    game.player.items.forEach((item, index) => {
+        const itemElement = document.createElement('div');
+        itemElement.textContent = `${item.name} - ${item.effect}`;
+        itemElement.dataset.index = index;
+        dom.Bag_List.appendChild(itemElement);
+    });
 }
 
 function updatePlayerStats(game) {
@@ -202,7 +224,6 @@ function playerDeath(game) {
     dom.Monster_Side.style.display = 'none';
 }
 
-
 function MonsterTurn(game, playerDefending = false) {
     if (!game || !game.CurrMonster || game.CurrMonster.Monster_Health <= 0) return;
 
@@ -238,14 +259,21 @@ function defeatMonster(game) {
     game.player.gold += game.CurrMonster.goldReward;
     game.fightCount++;
     updatePlayerStats(game);
+    game.encounter = Math.floor(Math.random() * 5); // 0 to 4
 
-    if (game.fightCount % 2 === 0) {
+    if (game.encounter === 0) {
         game.pendingNextMonster = true;
         Shop(game);
         return;
+    } else if (game.encounter === 1) {
+        dom.Message.textContent = ' You found an Inn!';
+        game.player.health = game.player.MaxHP;
+        updatePlayerStats(game);
+    } else if (game.encounter === 2) {
+        dom.Message.textContent = ' Another monster appears!';
+        spawnNextMonster(game);
+        return;
     }
-
-    spawnNextMonster(game);
 }
 
 dom.AttackBtn.addEventListener('click', () => {
@@ -280,9 +308,23 @@ dom.DefendBtn.addEventListener('click', () => {
     MonsterTurn(game, true);
 });
 
-/* =========================
-   BUTTONS - SHOP
-========================= */
+dom.BagBtn.addEventListener('click', () => {
+    if (!game) return;
+
+    showBagUI();
+    dom.Message.textContent = 'You opened your bag!';
+});
+
+dom.ExitBagBtn.addEventListener('click', () => {
+    if (!game) return;
+
+    showCombatUI();
+    dom.Message.textContent = 'You closed your bag!';
+    if (game.pendingNextMonster) {
+        spawnNextMonster(game);
+        game.pendingNextMonster = false;
+    }
+});
 
 dom.HealUPBtn.addEventListener('click', () => {
     if (!game) return;

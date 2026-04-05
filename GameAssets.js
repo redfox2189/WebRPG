@@ -21,6 +21,8 @@ const dom = {
     UpgradeBtn: $('#UpgradeBtn'),
     ExitShopBtn: $('#ExitShopBtn'),
     Bag: $('#Bag'),
+    Bag_Buttons: $('#Bag_Buttons'),
+    Bag_List: $('#Item_List'),
     Player: $('#Player'),
     Player_Side: $('#Player_Side'),
     MaxHP: $('#MaxHP'),
@@ -32,4 +34,5 @@ const dom = {
     Item_List: $('#Item_List'),
     UseBtn: $('#UseBtn'),
     DropBtn: $('#DropBtn'),
+    ExitBagBtn: $('#ExitBagBtn'),
 }
