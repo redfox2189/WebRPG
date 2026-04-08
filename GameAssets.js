@@ -35,4 +35,7 @@ const dom = {
     UseBtn: $('#UseBtn'),
     DropBtn: $('#DropBtn'),
     ExitBagBtn: $('#ExitBagBtn'),
+    health: $('#health'),
+    defence: $('#defence'),
+    attack: $('#attack'),
 }

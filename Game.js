@@ -21,9 +21,30 @@ class Monster {
 }
 
 class Item {
-    constructor(name, effect) {
+    constructor(name, effect, cost, quantity, bought) {
         this.name = name;
         this.effect = effect;
+        this.cost = cost;
+        this.quantity = quantity;
+        this.Bought = bought;
+    }
+}
+
+class HealthPotion extends Item {
+    constructor() {
+        super('Health Potion', 'Restores 20 health', 10, 0, false);
+    }
+}
+
+class AttackPotion extends Item {
+    constructor() {
+        super('Attack Potion', 'Increases attack by 5 for next combat', 30, 0, false);
+    }
+}
+
+class DefencePotion extends Item {
+    constructor() {
+        super('Defence Potion', 'Increases defence by 5 for next combat', 30, 0, false);
     }
 }
 
@@ -42,24 +63,6 @@ class Orc extends Monster {
 class Dragon extends Monster {
     constructor() {
         super('Dragon', 'images/dragon.png', 100, 20, 15, 50);
-    }
-}
-
-class HealthPotion extends Item {
-    constructor() {
-        super('Health Potion', 'Restores 20 health');
-    }
-}
-
-class AttackPotion extends Item {
-    constructor() {
-        super('Attack Potion', 'Increases attack by 5 for next combat');
-    }
-}
-
-class DefencePotion extends Item {
-    constructor() {
-        super('Defence Potion', 'Increases defence by 5 for next combat');
     }
 }
 
@@ -121,9 +124,16 @@ function showGameUI() {
 }
 
 function showShopUI() {
+    game.shopItems.forEach(item => {
+        const button = document.getElementById(item.name.toLowerCase().replace(' ', ''));
+        button.style.display = 'inline-block';
+    });
     dom.Combat.style.display = 'none';
     dom.Monster_Side.style.display = 'none';
     dom.Shop.style.display = 'grid';
+
+    dom.HealUPBtn.style.display = 'inline-block';
+    dom.UpgradeBtn.style.display = 'inline-block';
 }
 
 function showCombatUI() {
@@ -179,9 +189,18 @@ function spawnStartMonster(game) {
     updateMonsterUI(game);
 }
 
+function defcultyScaleMonster(monster, fightCount) {
+    const scaleFactor = 1 + fightCount * 0.1;
+    monster.Monster_Health = Math.round(monster.Monster_Health * scaleFactor);
+    monster.Attack = Math.round(monster.Attack * scaleFactor);
+    monster.Defence = Math.round(monster.Defence * scaleFactor);
+    monster.goldReward = Math.round(monster.goldReward * scaleFactor);
+};
+
 function spawnMonster(game) {
     game.monsterDefending = false;
     game.CurrMonster = Math.random() < 0.5 ? new Goblin() : new Orc();
+    defcultyScaleMonster(game.CurrMonster, game.fightCount);
     updateMonsterUI(game);
 }
 
@@ -215,6 +234,16 @@ function Shop(game) {
     dom.Message.textContent = 'A shop has appeared!';
 }
 
+function Inn(game) {
+    updatePlayerStats(game);
+    showShopUI();
+    dom.HealUPBtn.style.display = 'none';
+    dom.UpgradeBtn.style.display = 'none';
+    dom.Message.textContent = 'You found an Inn! Restoring your health...';
+    game.player.health = game.player.MaxHP;
+    updatePlayerStats(game);
+}
+
 function playerDeath(game) {
     game.player.health = 0;
     updatePlayerStats(game);
@@ -222,6 +251,7 @@ function playerDeath(game) {
     dom.Message.textContent = 'You died! Game Over!';
     dom.Combat.style.display = 'none';
     dom.Monster_Side.style.display = 'none';
+    dom.Start.style.display = 'grid';
 }
 
 function MonsterTurn(game, playerDefending = false) {
@@ -261,14 +291,13 @@ function defeatMonster(game) {
     updatePlayerStats(game);
     game.encounter = Math.floor(Math.random() * 5); // 0 to 4
 
-    if (game.encounter === 0) {
+    if (game.encounter === 0 || game.encounter === 3) {
         game.pendingNextMonster = true;
         Shop(game);
         return;
-    } else if (game.encounter === 1) {
+    } else if (game.encounter === 1 || game.encounter === 4) {
         dom.Message.textContent = ' You found an Inn!';
-        game.player.health = game.player.MaxHP;
-        updatePlayerStats(game);
+        Inn(game)
     } else if (game.encounter === 2) {
         dom.Message.textContent = ' Another monster appears!';
         spawnNextMonster(game);
