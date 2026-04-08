@@ -412,14 +412,12 @@ dom.ExitBagBtn.addEventListener('click', () => {
 
 dom.HealUPBtn.addEventListener('click', () => {
     if (!game) return;
-
-    const potion = new HealthPotion();
-
     if (game.player.gold >= potion.cost) {
-        game.player.gold -= potion.cost;
-        addItemToInventory(potion);
+        game.player.gold -= 50;
+        game.player.MaxHP += 30;
+        game.player.health = game.player.MaxHP;
         updatePlayerStats(game);
-        dom.Message.textContent = 'You bought a Health Potion!';
+        dom.Message.textContent = 'You bought a Max HP upgrade!';
     } else {
         dom.Message.textContent = 'Not enough gold!';
     }
@@ -427,8 +425,8 @@ dom.HealUPBtn.addEventListener('click', () => {
 
 dom.UpgradeBtn.addEventListener('click', () => {
     if (!game) return;
-
-    const potion = new AttackPotion();
+    ranPostion = Math.floor(Math.random() * 3);
+    const potion = ranPostion === 0 ? new AttackPotion() : ranPostion === 1 ? new DefencePotion() : new HealthPotion();
 
     if (game.player.gold >= potion.cost) {
         game.player.gold -= potion.cost;
