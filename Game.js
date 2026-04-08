@@ -6,6 +6,8 @@ class Player {
         this.defence = defence;
         this.gold = gold;
         this.items = [];
+        this.attackBuff = 0;
+        this.defenceBuff = 0;
     }
 }
 
@@ -21,30 +23,29 @@ class Monster {
 }
 
 class Item {
-    constructor(name, effect, cost, quantity, bought) {
+    constructor(name, effect, cost, quantity = 1) {
         this.name = name;
         this.effect = effect;
         this.cost = cost;
         this.quantity = quantity;
-        this.Bought = bought;
     }
 }
 
 class HealthPotion extends Item {
     constructor() {
-        super('Health Potion', 'Restores 20 health', 10, 0, false);
+        super('Health Potion', 'Restores 20 health', 10);
     }
 }
 
 class AttackPotion extends Item {
     constructor() {
-        super('Attack Potion', 'Increases attack by 5 for next combat', 30, 0, false);
+        super('Attack Potion', 'Increases attack by 5 for next combat', 30);
     }
 }
 
 class DefencePotion extends Item {
     constructor() {
-        super('Defence Potion', 'Increases defence by 5 for next combat', 30, 0, false);
+        super('Defence Potion', 'Increases defence by 5 for next combat', 30);
     }
 }
 
@@ -69,13 +70,12 @@ class Dragon extends Monster {
 class Game {
     constructor() {
         this.player = new Player(100, 100, 15, 5, 50);
-        this.monsters = [new Goblin(), new Orc(), new Dragon()];
         this.shopItems = [new HealthPotion(), new AttackPotion(), new DefencePotion()];
         this.CurrMonster = null;
         this.monsterDefending = false;
         this.fightCount = 0;
         this.pendingNextMonster = false;
-        this.Encouter = Math.floor(Math.random() * 3);
+        this.encounter = Math.floor(Math.random() * 5);
     }
 }
 
@@ -93,9 +93,13 @@ dom.LoadBtn.addEventListener('click', () => {
 
     if (savedGame) {
         game = JSON.parse(savedGame);
+
         game.fightCount = game.fightCount || 0;
         game.monsterDefending = game.monsterDefending || false;
         game.pendingNextMonster = game.pendingNextMonster || false;
+        game.player.items = game.player.items || [];
+        game.player.attackBuff = game.player.attackBuff || 0;
+        game.player.defenceBuff = game.player.defenceBuff || 0;
 
         showGameUI();
         dom.Message.textContent = 'Game Loaded!';
@@ -121,13 +125,11 @@ function showGameUI() {
     dom.Start.style.display = 'none';
     dom.Combat.style.display = 'grid';
     dom.Shop.style.display = 'none';
+    dom.Bag.style.display = 'none';
+    dom.Bag_Buttons.style.display = 'none';
 }
 
 function showShopUI() {
-    game.shopItems.forEach(item => {
-        const button = document.getElementById(item.name.toLowerCase().replace(' ', ''));
-        button.style.display = 'inline-block';
-    });
     dom.Combat.style.display = 'none';
     dom.Monster_Side.style.display = 'none';
     dom.Shop.style.display = 'grid';
@@ -145,6 +147,11 @@ function showCombatUI() {
 }
 
 function showBagUI() {
+    if (!dom.Bag || !dom.Bag_List || !dom.Bag_Buttons) {
+        console.error('Bag UI elements are missing.');
+        return;
+    }
+
     dom.Combat.style.display = 'none';
     dom.Monster_Side.style.display = 'none';
     dom.Bag.style.display = 'grid';
@@ -160,7 +167,7 @@ function showBagUI() {
 
     game.player.items.forEach((item, index) => {
         const itemElement = document.createElement('div');
-        itemElement.textContent = `${item.name} - ${item.effect}`;
+        itemElement.textContent = `${item.name} x${item.quantity} - ${item.effect}`;
         itemElement.dataset.index = index;
         dom.Bag_List.appendChild(itemElement);
     });
@@ -169,8 +176,8 @@ function showBagUI() {
 function updatePlayerStats(game) {
     dom.MaxHP.textContent = `Max HP: ${game.player.MaxHP}`;
     dom.Health.textContent = `Health: ${game.player.health}`;
-    dom.Attack.textContent = `Attack: ${game.player.attack}`;
-    dom.Defence.textContent = `Defence: ${game.player.defence}`;
+    dom.Attack.textContent = `Attack: ${game.player.attack + game.player.attackBuff}`;
+    dom.Defence.textContent = `Defence: ${game.player.defence + game.player.defenceBuff}`;
     dom.Gold.textContent = `Gold: ${game.player.gold}`;
     dom.fightCount.textContent = `Monsters Defeated: ${game.fightCount}`;
 }
@@ -189,24 +196,25 @@ function spawnStartMonster(game) {
     updateMonsterUI(game);
 }
 
-function defcultyScaleMonster(monster, fightCount) {
+function difficultyScaleMonster(monster, fightCount) {
     const scaleFactor = 1 + fightCount * 0.1;
     monster.Monster_Health = Math.round(monster.Monster_Health * scaleFactor);
     monster.Attack = Math.round(monster.Attack * scaleFactor);
     monster.Defence = Math.round(monster.Defence * scaleFactor);
     monster.goldReward = Math.round(monster.goldReward * scaleFactor);
-};
+}
 
 function spawnMonster(game) {
     game.monsterDefending = false;
     game.CurrMonster = Math.random() < 0.5 ? new Goblin() : new Orc();
-    defcultyScaleMonster(game.CurrMonster, game.fightCount);
+    difficultyScaleMonster(game.CurrMonster, game.fightCount);
     updateMonsterUI(game);
 }
 
 function spawnBoss(game) {
     game.monsterDefending = false;
     game.CurrMonster = new Dragon();
+    difficultyScaleMonster(game.CurrMonster, game.fightCount);
     updateMonsterUI(game);
 }
 
@@ -237,8 +245,10 @@ function Shop(game) {
 function Inn(game) {
     updatePlayerStats(game);
     showShopUI();
+
     dom.HealUPBtn.style.display = 'none';
     dom.UpgradeBtn.style.display = 'none';
+
     dom.Message.textContent = 'You found an Inn! Restoring your health...';
     game.player.health = game.player.MaxHP;
     updatePlayerStats(game);
@@ -257,16 +267,18 @@ function playerDeath(game) {
 function MonsterTurn(game, playerDefending = false) {
     if (!game || !game.CurrMonster || game.CurrMonster.Monster_Health <= 0) return;
 
-    const monsterAction = Math.floor(Math.random() * 2); // 0 = attack, 1 = defend
+    const monsterAction = Math.floor(Math.random() * 2);
 
     if (monsterAction === 0) {
         let damageToPlayer;
 
+        const totalDefence = game.player.defence + game.player.defenceBuff;
+
         if (playerDefending) {
-            damageToPlayer = Math.max(0, game.CurrMonster.Attack - (game.player.defence + 3));
+            damageToPlayer = Math.max(0, game.CurrMonster.Attack - (totalDefence + 3));
             dom.Message.textContent = `${game.CurrMonster.Monster_Name} attacks, but you defend!`;
         } else {
-            damageToPlayer = Math.max(1, game.CurrMonster.Attack - game.player.defence);
+            damageToPlayer = Math.max(1, game.CurrMonster.Attack - totalDefence);
             dom.Message.textContent = `${game.CurrMonster.Monster_Name} attacks!`;
         }
 
@@ -289,38 +301,80 @@ function defeatMonster(game) {
     game.player.gold += game.CurrMonster.goldReward;
     game.fightCount++;
     updatePlayerStats(game);
-    game.encounter = Math.floor(Math.random() * 5); // 0 to 4
+
+    game.encounter = Math.floor(Math.random() * 5);
 
     if (game.encounter === 0 || game.encounter === 3) {
         game.pendingNextMonster = true;
         Shop(game);
         return;
     } else if (game.encounter === 1 || game.encounter === 4) {
-        dom.Message.textContent = ' You found an Inn!';
-        Inn(game)
+        Inn(game);
+        game.pendingNextMonster = true;
+        return;
     } else if (game.encounter === 2) {
-        dom.Message.textContent = ' Another monster appears!';
+        dom.Message.textContent += ' Another monster appears!';
         spawnNextMonster(game);
         return;
     }
+}
+
+function addItemToInventory(itemToAdd) {
+    const existingItem = game.player.items.find(item => item.name === itemToAdd.name);
+
+    if (existingItem) {
+        existingItem.quantity++;
+    } else {
+        game.player.items.push({ ...itemToAdd });
+    }
+}
+
+function useItem(index) {
+    const item = game.player.items[index];
+    if (!item) return;
+
+    if (item.name === 'Health Potion') {
+        game.player.health = Math.min(game.player.MaxHP, game.player.health + 20);
+        dom.Message.textContent = 'You used a Health Potion!';
+    } else if (item.name === 'Attack Potion') {
+        game.player.attackBuff += 5;
+        dom.Message.textContent = 'You used an Attack Potion!';
+    } else if (item.name === 'Defence Potion') {
+        game.player.defenceBuff += 5;
+        dom.Message.textContent = 'You used a Defence Potion!';
+    }
+
+    item.quantity--;
+
+    if (item.quantity <= 0) {
+        game.player.items.splice(index, 1);
+    }
+
+    updatePlayerStats(game);
+    showBagUI();
 }
 
 dom.AttackBtn.addEventListener('click', () => {
     if (!game || !game.CurrMonster) return;
 
     let damageToMonster;
+    const totalAttack = game.player.attack + game.player.attackBuff;
 
     if (game.monsterDefending) {
-        damageToMonster = Math.max(0, game.player.attack - (game.CurrMonster.Defence + 3));
+        damageToMonster = Math.max(0, totalAttack - (game.CurrMonster.Defence + 3));
         game.monsterDefending = false;
         dom.Message.textContent = `You attack, but the ${game.CurrMonster.Monster_Name} is defending!`;
     } else {
-        damageToMonster = Math.max(1, game.player.attack - game.CurrMonster.Defence);
+        damageToMonster = Math.max(1, totalAttack - game.CurrMonster.Defence);
         dom.Message.textContent = `You attack the ${game.CurrMonster.Monster_Name}!`;
     }
 
     game.CurrMonster.Monster_Health -= damageToMonster;
     updateMonsterUI(game);
+
+    game.player.attackBuff = 0;
+    game.player.defenceBuff = 0;
+    updatePlayerStats(game);
 
     if (game.CurrMonster.Monster_Health <= 0) {
         defeatMonster(game);
@@ -349,6 +403,7 @@ dom.ExitBagBtn.addEventListener('click', () => {
 
     showCombatUI();
     dom.Message.textContent = 'You closed your bag!';
+
     if (game.pendingNextMonster) {
         spawnNextMonster(game);
         game.pendingNextMonster = false;
@@ -358,10 +413,11 @@ dom.ExitBagBtn.addEventListener('click', () => {
 dom.HealUPBtn.addEventListener('click', () => {
     if (!game) return;
 
-    if (game.player.gold >= 10) {
-        game.player.gold -= 10;
-        game.player.MaxHP += 20;
-        game.player.health = Math.min(game.player.MaxHP, game.player.health + 20);
+    const potion = new HealthPotion();
+
+    if (game.player.gold >= potion.cost) {
+        game.player.gold -= potion.cost;
+        addItemToInventory(potion);
         updatePlayerStats(game);
         dom.Message.textContent = 'You bought a Health Potion!';
     } else {
@@ -372,12 +428,13 @@ dom.HealUPBtn.addEventListener('click', () => {
 dom.UpgradeBtn.addEventListener('click', () => {
     if (!game) return;
 
-    if (game.player.gold >= 30) {
-        game.player.gold -= 30;
-        game.player.attack += 5;
-        game.player.defence += 5;
+    const potion = new AttackPotion();
+
+    if (game.player.gold >= potion.cost) {
+        game.player.gold -= potion.cost;
+        addItemToInventory(potion);
         updatePlayerStats(game);
-        dom.Message.textContent = 'You upgraded your stats!';
+        dom.Message.textContent = 'You bought an Attack Potion!';
     } else {
         dom.Message.textContent = 'Not enough gold!';
     }
