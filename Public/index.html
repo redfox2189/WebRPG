@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRPG</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="GameAssets.js" defer></script>
+    <script src="game.js" defer></script>
+</head>
+
+<body id="Body">
+    <div id="Game_Container">
+        <h3 id="Message">Welcome to WebRPG. A simple Rpg about fighting monsters.</h3>
+        <p id="fightCount"></p>
+        <div id="Game_View">
+            <div id="Monster_Side">
+                <p id="Monster_Name"></p>
+                <img id="Monster_Image" src="" alt="">
+                <p id="Monster_Health"></p>
+            </div>
+            <div id="Player_Side">
+                <div id="Start">
+                    <button id="NewBtn">New Game</button>
+                    <br>
+                    <button id="LoadBtn">Load Game</button>
+                </div>
+                <div id="Combat">
+                    <button id="AttackBtn">Attack</button>
+                    <br>
+                    <button id="SaveBtn">Save Game</button>
+                    <button id="DefendBtn">Defend</button>
+                    <br>
+                    <button id="BagBtn">Bag</button>
+                </div>
+                <div id="Shop">
+                    <button id="HealUPBtn">50: Max Hp Up</button>
+                    
+                    <button id="UpgradeBtn">30: Random Potion</button>
+                    
+                    <button id="ExitShopBtn">Exit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="PlayScreen">
+    <div id="Bag">
+        <h4>Bag</h4>
+        <div id="Bag_List">
+        </div>
+        <div id="Bag_Buttons">
+            <button id="Usebtn">Use</button>
+            <button id="DropBtn">Drop</button>
+            <button id="ExitBagBtn">Exit Bag</button>
+        </div>
+    </div>
+    <div id="Player">
+        <h4>Player stats</h4>
+        <p id="MaxHP">p</p>
+        <p id="Health">p</p>
+        <p id="Attack">p</p>
+        <p id="Defence">p</p>
+        <p id="Gold">p</p>
+    </div>
+</div>
+</body>
+
+<footer>
+    <p>&copy; 2026 WebRPG. All rights reserved.</p>
+</footer>
