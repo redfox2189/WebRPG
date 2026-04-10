@@ -107,6 +107,15 @@ dom.SaveBtn.addEventListener('click', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(game)
+    })
+    .then(res => res.text())
+    .then(data => {
+        console.log(data);
+        dom.Message.textContent = "Game saved!";
+    })
+    .catch(err => {
+        console.error('Error saving game:', err);
+        dom.Message.textContent = "Failed to save game!";
     });
 });
 

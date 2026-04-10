@@ -1,6 +1,7 @@
-const fs = require('fs');
 const express = require('express');
+const fs = require('fs');
 const app = express();
+app.use(express.json());
 app.use(express.static('Public'));
 
 app.listen(3000, () => {
@@ -8,6 +9,7 @@ app.listen(3000, () => {
 });
 
 app.post('/save', (req, res) =>{
+    console.log(req.body);
     fs.writeFile('savegame.json', JSON.stringify(req.body), (err) => {
         if (err) {
             console.error('Error saving game:', err);
