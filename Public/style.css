@@ -15,6 +15,16 @@ body{
     font-family: sans-serif;
 }
 
+body.dark,
+body.dark #Game_Container,
+body.dark #Player,
+body.dark #Bag,
+body.dark #Monster_Side,
+body.dark #Player_Side {
+    background-color: #1e1e1e;
+    color: #fff;
+}
+
 #Game_Container{
     display:grid;
     padding: 7px;

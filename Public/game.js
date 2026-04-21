@@ -452,3 +452,47 @@ dom.ExitShopBtn.addEventListener('click', () => {
     updateMonsterUI(game);
     updatePlayerStats(game);
 }); 
+
+dom.UseBtn.addEventListener('click', () => {
+    const selectedItem = document.querySelector('#Bag_List div.selected');
+    if (!selectedItem) {
+        dom.Message.textContent = 'Please select an item to use!';
+        return;
+    }
+    const index = parseInt(selectedItem.dataset.index);
+    useItem(index);
+});
+
+dom.DropBtn.addEventListener('click', () => {
+    const selectedItem = document.querySelector('#Bag_List div.selected');
+    if (!selectedItem) {
+        dom.Message.textContent = 'Please select an item to drop!';
+        return;
+    }
+    const index = parseInt(selectedItem.dataset.index);
+    game.player.items.splice(index, 1);
+    updatePlayerStats(game);
+    showBagUI();
+    dom.Message.textContent = 'You dropped an item!';
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target.parentElement === dom.Bag_List) {
+        const previouslySelected = document.querySelector('#Bag_List div.selected');
+        if (previouslySelected) {
+            previouslySelected.classList.remove('selected');
+        }
+        e.target.classList.add('selected');
+    }
+});
+
+if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+}
+
+dom.DarkBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+
+    const isDark = document.body.classList.contains('dark');
+    dom.DarkBtn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+});

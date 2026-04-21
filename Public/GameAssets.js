@@ -1,6 +1,7 @@
 const $ = (selector) => document.querySelector(selector);
 
 const dom = {
+    DarkBtn: $('#DarkModeBtn'),
     Body : $('#Body'),
     Message: $('#Message'),
     fightCount: $('#fightCount'),
